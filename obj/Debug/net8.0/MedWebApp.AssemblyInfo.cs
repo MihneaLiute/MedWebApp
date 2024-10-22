@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MedWebApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf7de9a36920f4fa992e0ea68934bf13581e35d1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1079191f82e42b597a6f6e82ebac9ad9e2f9517")]
 [assembly: System.Reflection.AssemblyProductAttribute("MedWebApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MedWebApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
