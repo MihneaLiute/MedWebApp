@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MedWebApp.Data;
 using MedWebApp.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace MedWebApp.Controllers
 {
@@ -23,6 +25,13 @@ namespace MedWebApp.Controllers
         public async Task<IActionResult> Index()
         {
             return View(await _context.Appointment.ToListAsync());
+        }
+        
+        //[Authorize(Roles = "customer")] TODO reinstate out
+        // GET: ShowCustomerAppointments
+        public async Task<IActionResult> ShowCustomerAppointments()
+        {
+            return View("Index", await _context.Appointment.Where(x => x.Customer.NormalizedUserName == HttpContext.User.Identity.Name).ToListAsync());
         }
 
         // GET: Appointments/Details/5
