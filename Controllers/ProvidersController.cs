@@ -66,8 +66,11 @@ namespace MedWebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register([Bind("Id,UserId,Type")] Provider provider, int[] selectedServices)
         {
-            if (ModelState.IsValid)
-            {
+            //if (ModelState.IsValid)
+            //{
+                provider.UserId = _userManager.GetUserId(User);
+                provider.User = await _userManager.GetUserAsync(User);
+
                 try
                 {
                     if (selectedServices != null)
@@ -85,7 +88,7 @@ namespace MedWebApp.Controllers
                     }
                     _context.Add(provider);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Edit), new { id = provider.Id });
+                    return RedirectToAction(nameof(Edit), new { id = provider.Id , provider, selectedServices});
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -95,9 +98,9 @@ namespace MedWebApp.Controllers
                     }
                     throw;
                 }
-            }
+            //}
             //return View(provider);
-            return RedirectToAction(nameof(Edit), new { id = provider.Id });
+            //return RedirectToAction(nameof(Edit), new { id = provider.Id });
         }
 
         // GET: Providers/Create
@@ -139,7 +142,7 @@ namespace MedWebApp.Controllers
             if (provider != null)
             {
                 // Provider exists, redirect to Edit
-                return RedirectToAction(nameof(Edit), new { id = provider.Id });
+                return RedirectToAction(nameof(Edit), new { id = provider.Id , provider = provider, selectedSeervices = new int[20] });
             }
 
             // No provider found, redirect to Create
@@ -212,7 +215,7 @@ namespace MedWebApp.Controllers
                     _context.Entry(providerToUpdate).CurrentValues.SetValues(provider);
                     await _context.SaveChangesAsync();
 
-                    return RedirectToAction(nameof(Edit), new { id = provider.Id });
+                    return RedirectToAction(nameof(Edit), new { id = provider.Id , provider, selectedServices});
                 }
                 catch (DbUpdateConcurrencyException)
                 {
