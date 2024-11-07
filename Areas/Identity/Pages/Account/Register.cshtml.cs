@@ -25,6 +25,7 @@ namespace MedWebApp.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
@@ -32,12 +33,14 @@ namespace MedWebApp.Areas.Identity.Pages.Account
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
@@ -76,8 +79,16 @@ namespace MedWebApp.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
-            [Display(Name = "Email")]
+            [Display(Name = "Role")]
             public string Email { get; set; }
+
+            /// <summary>
+            ///     User role selection
+            /// </summary>
+            [Required]
+            [DataType(DataType.Text)]
+            [Display(Name = "Email")]
+            public string Role { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -120,6 +131,17 @@ namespace MedWebApp.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
+                    // Add new user specified role, or a default customer role
+                    var defaultrole = _roleManager.FindByNameAsync("customer").Result;
+                    var role = Input.Role;
+                    if (role != null)
+                    {
+                        IdentityResult roleresult = await _userManager.AddToRoleAsync(user, role);
+                    }
+                    else if (defaultrole != null)
+                    {
+                        IdentityResult roleresult = await _userManager.AddToRoleAsync(user, defaultrole.Name);
+                    }
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);

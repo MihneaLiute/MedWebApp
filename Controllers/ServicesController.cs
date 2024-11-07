@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MedWebApp.Data;
 using MedWebApp.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MedWebApp.Controllers
 {
@@ -39,6 +40,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Services/Create
+        [Authorize(Roles ="admin")]
         public IActionResult Create()
         {
             return View();
@@ -61,6 +63,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Services/Edit/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -79,6 +82,7 @@ namespace MedWebApp.Controllers
         // POST: Services/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,DurationHours,Price,Requirements,Disclaimers")] Service service)
@@ -112,6 +116,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Services/Delete/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -132,6 +137,7 @@ namespace MedWebApp.Controllers
         // POST: Services/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var service = await _context.Service.FindAsync(id);

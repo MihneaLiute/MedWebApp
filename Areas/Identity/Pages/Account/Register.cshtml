@@ -4,6 +4,8 @@
     ViewData["Title"] = "Register";
 }
 
+@inject RoleManager<IdentityRole> RoleManager
+
 <h1>@ViewData["Title"]</h1>
 
 <div class="row">
@@ -16,6 +18,16 @@
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label asp-for="Input.Email">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <select asp-for="Input.Role" class="form-control" aria-required="true" >
+                    <option value="">Choose your intended role</option>
+                    <option value="customer">Regular user/customer</option>
+                    <option value="provider">Service Provider</option>
+                    <option value="admin">Site Administrator</option>
+                </select>
+                <label asp-for="Input.Role">Role</label>
+                <span asp-validation-for="Input.Role" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />

@@ -4,19 +4,16 @@ using MedWebApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace MedWebApp.Data.Migrations
+namespace MedWebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241031064439_initial setup")]
-    partial class initialsetup
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,6 +51,53 @@ namespace MedWebApp.Data.Migrations
                     b.HasIndex("ProviderId");
 
                     b.ToTable("Appointment");
+                });
+
+            modelBuilder.Entity("MedWebApp.Models.Provider", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Provider");
+                });
+
+            modelBuilder.Entity("MedWebApp.Models.ProviderService", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("ProviderService");
                 });
 
             modelBuilder.Entity("MedWebApp.Models.Service", b =>
@@ -326,6 +370,21 @@ namespace MedWebApp.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("ProviderService", b =>
+                {
+                    b.Property<int>("AvailableServicesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProvidersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AvailableServicesId", "ProvidersId");
+
+                    b.HasIndex("ProvidersId");
+
+                    b.ToTable("ProvidersServices", (string)null);
+                });
+
             modelBuilder.Entity("MedWebApp.Models.Appointment", b =>
                 {
                     b.HasOne("MedWebApp.Models.Service", "BookedService")
@@ -347,6 +406,36 @@ namespace MedWebApp.Data.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Provider");
+                });
+
+            modelBuilder.Entity("MedWebApp.Models.Provider", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithOne()
+                        .HasForeignKey("MedWebApp.Models.Provider", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MedWebApp.Models.ProviderService", b =>
+                {
+                    b.HasOne("MedWebApp.Models.Provider", "Provider")
+                        .WithMany("ProviderServices")
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MedWebApp.Models.Service", "Service")
+                        .WithMany("ProviderServices")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Provider");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("MedWebApp.Models.Service", b =>
@@ -405,6 +494,31 @@ namespace MedWebApp.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ProviderService", b =>
+                {
+                    b.HasOne("MedWebApp.Models.Service", null)
+                        .WithMany()
+                        .HasForeignKey("AvailableServicesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MedWebApp.Models.Provider", null)
+                        .WithMany()
+                        .HasForeignKey("ProvidersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MedWebApp.Models.Provider", b =>
+                {
+                    b.Navigation("ProviderServices");
+                });
+
+            modelBuilder.Entity("MedWebApp.Models.Service", b =>
+                {
+                    b.Navigation("ProviderServices");
                 });
 
             modelBuilder.Entity("MedWebApp.Models.ServicePackage", b =>

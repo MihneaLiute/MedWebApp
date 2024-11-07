@@ -106,6 +106,32 @@ using (var scope = app.Services.CreateScope())
         await userManager.CreateAsync (user, password);
         await userManager.AddToRoleAsync(user, "admin");
     }
+
+    string email2 = "provider@provider.com";
+    string password2 = "ProviderP@ss1234";
+    if (await userManager.FindByEmailAsync(email2) == null)
+    {
+        var user = new IdentityUser();
+        user.UserName = email2;
+        user.Email = email2;
+        user.EmailConfirmed = true; // not necessary at the moment since verified emails are not required, but nice to have in later stages
+
+        await userManager.CreateAsync(user, password2);
+        await userManager.AddToRoleAsync(user, "provider");
+    }
+
+    string email3 = "customer@customer.com";
+    string password3 = "CustomerP@ss1234";
+    if (await userManager.FindByEmailAsync(email3) == null)
+    {
+        var user = new IdentityUser();
+        user.UserName = email3;
+        user.Email = email3;
+        user.EmailConfirmed = true; // not necessary at the moment since verified emails are not required, but nice to have in later stages
+
+        await userManager.CreateAsync(user, password3);
+        await userManager.AddToRoleAsync(user, "customer");
+    }
 }
 
 app.Run();

@@ -42,12 +42,22 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Appointments" asp-action="ShowCustomerAppointments">My Appointments</a>
                             </li>
                         }
+                        @if(User.IsInRole("provider"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Appointments" asp-action="ShowProviderAppointments">Manage my Appointments</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Providers" asp-action="ManageProvider">Manage Provider Profile</a>
+                            </li>
+                        }
                         @if(User.IsInRole("admin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Appointments" asp-action="Index">Manage All Appointments</a>
                             </li>
                         }
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
