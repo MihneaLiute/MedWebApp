@@ -50,12 +50,7 @@ namespace MedWebApp.Controllers
         // GET: Providers/Register
         public async Task<IActionResult> Register()
         {
-            var AllServices = await _context.Service.AsNoTracking().ToListAsync();
-            ViewBag.Services = new MultiSelectList(
-                AllServices,
-                "Id", // value field
-                "Name" // display field
-                );
+            ViewBag.AllServices = await _context.Service.ToListAsync();
             return View();
         }
 
@@ -68,8 +63,7 @@ namespace MedWebApp.Controllers
         {
             //if (ModelState.IsValid)
             //{
-                provider.UserId = _userManager.GetUserId(User);
-                provider.User = await _userManager.GetUserAsync(User);
+                provider.User = await _userManager.FindByIdAsync(provider.UserId);
 
                 try
                 {
@@ -88,7 +82,7 @@ namespace MedWebApp.Controllers
                     }
                     _context.Add(provider);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Edit), new { id = provider.Id , provider, selectedServices});
+                    return RedirectToAction(nameof(Edit), new { id = provider.Id}); // , provider, selectedServices
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -100,7 +94,7 @@ namespace MedWebApp.Controllers
                 }
             //}
             //return View(provider);
-            //return RedirectToAction(nameof(Edit), new { id = provider.Id });
+            return RedirectToAction(nameof(Edit), new { id = provider.Id });
         }
 
         // GET: Providers/Create
@@ -142,7 +136,7 @@ namespace MedWebApp.Controllers
             if (provider != null)
             {
                 // Provider exists, redirect to Edit
-                return RedirectToAction(nameof(Edit), new { id = provider.Id , provider = provider, selectedSeervices = new int[20] });
+                return RedirectToAction(nameof(Edit), new { id = provider.Id }); // , provider, selectedServices
             }
 
             // No provider found, redirect to Create
@@ -152,9 +146,13 @@ namespace MedWebApp.Controllers
         // GET: Providers/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            // Load provider and services in a single operation
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             var provider = await _context.Provider
-                .AsNoTracking()  // Add this to prevent tracking
                 .Include(p => p.AvailableServices)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -163,17 +161,8 @@ namespace MedWebApp.Controllers
                 return NotFound();
             }
 
-            // Load all services in a separate operation
-            var allServices = await _context.Service
-                .AsNoTracking()  // Add this to prevent tracking
-                .ToListAsync();
-
-            ViewBag.Services = new MultiSelectList(
-                allServices,
-                "Id",
-                "Name",
-                provider.AvailableServices.Select(s => s.Id)
-            );
+            // Get all services for the checkbox list
+            ViewBag.AllServices = await _context.Service.ToListAsync();
 
             return View(provider);
         }
@@ -181,9 +170,11 @@ namespace MedWebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(int id, Provider provider, int[] selectedServices)
         {
-            if (ModelState.IsValid)
-            {
-                try
+            provider.User = await _userManager.FindByIdAsync(provider.UserId);
+         
+            //if (ModelState.IsValid)
+            //{
+            try
                 {
                     // Load the provider with its services
                     var providerToUpdate = await _context.Provider
@@ -210,12 +201,13 @@ namespace MedWebApp.Controllers
                             providerToUpdate.AvailableServices.Add(service);
                         }
                     }
+             
 
                     // Update other properties
                     _context.Entry(providerToUpdate).CurrentValues.SetValues(provider);
                     await _context.SaveChangesAsync();
 
-                    return RedirectToAction(nameof(Edit), new { id = provider.Id , provider, selectedServices});
+                    return RedirectToAction(nameof(Edit), new { id = provider.Id});
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -225,16 +217,11 @@ namespace MedWebApp.Controllers
                     }
                     throw;
                 }
-            }
+            //}
 
             // If we got this far, something failed
-            // Reload the services for the dropdown
-            ViewBag.Services = new MultiSelectList(
-                await _context.Service.AsNoTracking().ToListAsync(),
-                "Id",
-                "Name",
-                selectedServices
-            );
+            // Reload the services for the checklist
+            ViewBag.AllServices = await _context.Service.ToListAsync();
 
             return View(provider);
         }

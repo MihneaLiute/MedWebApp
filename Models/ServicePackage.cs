@@ -11,7 +11,7 @@
         public List<string>? Requirements { get; set; } //TODO: consider refactoring into specic Requirement objects or booleans
         public List<string>? Disclaimers { get; set; }
 
-        List<string> GetRequirements() //TODO: consider refactoring so that an individual requirement is not just a string; see requirements in Service class
+        public List<string> GetRequirements() //TODO: consider refactoring so that an individual requirement is not just a string; see requirements in Service class
         {
             List<string> result = new List<string>();
             foreach (Service service in IncludedServices)
@@ -21,7 +21,7 @@
             return result;
         }
 
-        List<string> GeDisclaimers()
+        public List<string> GetDisclaimers()
         {
             List<string> result = new List<string>();
             foreach (Service service in IncludedServices)

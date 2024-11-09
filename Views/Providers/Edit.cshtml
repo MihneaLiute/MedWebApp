@@ -16,21 +16,41 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="UserId" value="@((await UserManager.FindByNameAsync(User.Identity.Name)).Id)" />
+            
             <input type="hidden" asp-for="UserId" value="@await UserManager.FindByNameAsync(User.Identity.Name)).Id" />
             <div class="form-group">
-                <label>
-                    Select the services that you can perform from below. 
-                    Currently, you are registered as being able to provide the following: 
-                    <ul>
-                    @foreach (Service service in Model.AvailableServices)
+                <label class="control-label">Available Services</label>
+                <p class="text-muted">Select the services that you can perform:</p>
+
+                <div class="checkbox-list">
+
+                    @foreach (var service in ViewBag.AllServices as List<Service>)
                     {
-                        <li> @service.Name </li>
+                        <div class="form-check">
+                            @{bool isChecked = Model.AvailableServices?.Any(s => s.Id == service.Id) ?? false;}
+                            <input type="checkbox" class="form-check-input" name="SelectedServices" value="@service.Id" id="service_@service.Id" @(isChecked ? "checked" : "")/>
+                            <label class="form-check-label" for="service_@service.Id">@service.Name</label>
+                        </div>
                     }
-                    </ul>
-                </label>
-                <select multiple asp-items="ViewBag.Services">
-                </select>
+
+                </div>
             </div>
+
+            <style>
+                .checkbox-list {
+                    max-height: 300px;
+                    overflow-y: auto;
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    border-radius: 4px;
+                }
+
+                .form-check {
+                    margin-bottom: 8px;
+                }
+            </style>
+
             <div class="form-group">
                 <label asp-for="Type" class="control-label"></label>
                 <input asp-for="Type" class="form-control" />
@@ -48,5 +68,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

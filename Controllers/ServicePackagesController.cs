@@ -44,8 +44,10 @@ namespace MedWebApp.Controllers
         }
 
         // GET: ServicePackages/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            // Get all services for the checkbox list
+            ViewBag.AllServices = await _context.Service.ToListAsync();
             return View();
         }
 
@@ -54,15 +56,31 @@ namespace MedWebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Requirements,Disclaimers")] ServicePackage servicePackage)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price")] ServicePackage servicePackage, int[] selectedServices)
         {
-            if (ModelState.IsValid)
+            if (selectedServices != null && selectedServices.Any())
             {
+                // Load all selected services in one go
+                var servicesToAdd = await _context.Service
+                    .Where(s => selectedServices.Contains(s.Id))
+                    .ToListAsync();
+
+                servicePackage.IncludedServices = new List<Service>();
+                foreach (var service in servicesToAdd)
+                {
+                    servicePackage.IncludedServices?.Add(service);
+                }
+                servicePackage.Disclaimers = servicePackage.GetDisclaimers();
+                servicePackage.Requirements = servicePackage.GetRequirements();
+            }
+            //if (ModelState.IsValid)
+            //{
                 _context.Add(servicePackage);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
-            }
-            return View(servicePackage);
+            //}
+            //ViewBag.AllServices = await _context.Service.ToListAsync();
+            //return View(servicePackage);
         }
 
         // GET: ServicePackages/Edit/5
@@ -78,6 +96,10 @@ namespace MedWebApp.Controllers
             {
                 return NotFound();
             }
+
+            // Get all services for the checkbox list
+            ViewBag.AllServices = await _context.Service.ToListAsync();
+
             return View(servicePackage);
         }
 
@@ -86,15 +108,28 @@ namespace MedWebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Requirements,Disclaimers")] ServicePackage servicePackage)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price")] ServicePackage servicePackage, int[] selectedServices)
         {
             if (id != servicePackage.Id)
             {
                 return NotFound();
             }
-
-            if (ModelState.IsValid)
+            if (selectedServices != null && selectedServices.Any())
             {
+                // Load all selected services in one go
+                var servicesToAdd = await _context.Service
+                    .Where(s => selectedServices.Contains(s.Id))
+                    .ToListAsync();
+                servicePackage.IncludedServices = new List<Service>();
+                foreach (var service in servicesToAdd)
+                {
+                    servicePackage.IncludedServices?.Add(service);
+                }
+                servicePackage.Disclaimers = servicePackage.GetDisclaimers();
+                servicePackage.Requirements = servicePackage.GetRequirements();
+            }
+            //if (ModelState.IsValid)
+            //{
                 try
                 {
                     _context.Update(servicePackage);
@@ -112,8 +147,9 @@ namespace MedWebApp.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
-            return View(servicePackage);
+            //}
+            //ViewBag.AllServices = await _context.Service.ToListAsync();
+            //return View(servicePackage);
         }
 
         // GET: ServicePackages/Delete/5
