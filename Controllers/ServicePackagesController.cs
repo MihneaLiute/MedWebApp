@@ -65,7 +65,7 @@ namespace MedWebApp.Controllers
                     .Where(s => selectedServices.Contains(s.Id))
                     .ToListAsync();
 
-                servicePackage.IncludedServices = new List<Service>();
+                //servicePackage.IncludedServices = new List<Service>();
                 foreach (var service in servicesToAdd)
                 {
                     servicePackage.IncludedServices?.Add(service);
@@ -114,25 +114,40 @@ namespace MedWebApp.Controllers
             {
                 return NotFound();
             }
-            if (selectedServices != null && selectedServices.Any())
-            {
-                // Load all selected services in one go
-                var servicesToAdd = await _context.Service
-                    .Where(s => selectedServices.Contains(s.Id))
-                    .ToListAsync();
-                servicePackage.IncludedServices = new List<Service>();
-                foreach (var service in servicesToAdd)
-                {
-                    servicePackage.IncludedServices?.Add(service);
-                }
-                servicePackage.Disclaimers = servicePackage.GetDisclaimers();
-                servicePackage.Requirements = servicePackage.GetRequirements();
-            }
+            
             //if (ModelState.IsValid)
             //{
                 try
                 {
-                    _context.Update(servicePackage);
+                    var servicePackageToUpdate = await _context
+                    .ServicePackage.Include(sp => sp.IncludedServices)
+                    .FirstOrDefaultAsync(sp =>  sp.Id == id);
+                    if (servicePackageToUpdate == null)
+                    {
+                     return NotFound();
+                    }
+
+                    servicePackageToUpdate.IncludedServices.Clear();
+
+                if (selectedServices != null && selectedServices.Any())
+                {
+                    // Load all selected services in one go
+                    var servicesToAdd = await _context.Service
+                        .Where(s => selectedServices.Contains(s.Id))
+                        .ToListAsync();
+                    
+                    foreach (var service in servicesToAdd)
+                    {
+                        servicePackageToUpdate.IncludedServices?.Add(service);
+                    }
+                    servicePackageToUpdate.Disclaimers = servicePackageToUpdate.GetDisclaimers();
+                    servicePackageToUpdate.Requirements = servicePackageToUpdate.GetRequirements();
+                }
+
+                _context.Entry(servicePackageToUpdate)
+                    .CurrentValues
+                    .SetValues(servicePackage);
+                    //_context.Update(servicePackage);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
