@@ -65,8 +65,8 @@ namespace MedWebApp.Controllers
                     .Where(s => selectedServices.Contains(s.Id))
                     .ToListAsync();
 
-                //servicePackage.IncludedServices = new List<Service>();
-                foreach (var service in servicesToAdd)
+                servicePackage.IncludedServices = new List<Service>();
+                foreach (Service service in servicesToAdd)
                 {
                     servicePackage.IncludedServices?.Add(service);
                 }
@@ -127,7 +127,7 @@ namespace MedWebApp.Controllers
                      return NotFound();
                     }
 
-                    servicePackageToUpdate.IncludedServices.Clear();
+                    //servicePackageToUpdate.IncludedServices.Clear();
 
                 if (selectedServices != null && selectedServices.Any())
                 {
@@ -135,19 +135,19 @@ namespace MedWebApp.Controllers
                     var servicesToAdd = await _context.Service
                         .Where(s => selectedServices.Contains(s.Id))
                         .ToListAsync();
-                    
-                    foreach (var service in servicesToAdd)
+                    servicePackage.IncludedServices = new List<Service>();
+                    foreach (Service service in servicesToAdd)
                     {
-                        servicePackageToUpdate.IncludedServices?.Add(service);
+                        servicePackage.IncludedServices?.Add(service);
                     }
-                    servicePackageToUpdate.Disclaimers = servicePackageToUpdate.GetDisclaimers();
-                    servicePackageToUpdate.Requirements = servicePackageToUpdate.GetRequirements();
+                    servicePackageToUpdate.IncludedServices = servicePackage.IncludedServices;
+                    servicePackage.Disclaimers = servicePackage.GetDisclaimers();
+                    servicePackage.Requirements = servicePackage.GetRequirements();
                 }
 
                 _context.Entry(servicePackageToUpdate)
                     .CurrentValues
                     .SetValues(servicePackage);
-                    //_context.Update(servicePackage);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

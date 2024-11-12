@@ -14,19 +14,19 @@
         public List<string> GetRequirements() //TODO: consider refactoring so that an individual requirement is not just a string; see requirements in Service class
         {
             List<string> result = new List<string>();
-            foreach (Service service in IncludedServices)
+            foreach (var service in IncludedServices)
             {
-                result.Union(service.Requirements);
+                result = result.Union(service.Requirements).ToList();
             }
-            return result;
+             return result;
         }
 
         public List<string> GetDisclaimers()
         {
             List<string> result = new List<string>();
-            foreach (Service service in IncludedServices)
+            foreach (var service in IncludedServices)
             {
-                result.Union(service.Disclaimers);
+                result = result.Union(service.Disclaimers).ToList();
             }
             return result;
         }
@@ -48,16 +48,8 @@
             Description = description;
             Price = price;
             IncludedServices = includedServices;
-            Requirements = new List<string>();
-            foreach (Service service in IncludedServices)
-            {
-                Requirements.Union(service.Requirements);
-            }
-            Disclaimers = new List<string>();
-            foreach (Service service in IncludedServices)
-            {
-                Disclaimers.Union(service.Disclaimers);
-            }
+            Requirements = this.GetRequirements();
+            Disclaimers = this.GetDisclaimers();
         }
     }
 }
