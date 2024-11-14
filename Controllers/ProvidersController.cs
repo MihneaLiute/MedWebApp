@@ -61,8 +61,6 @@ namespace MedWebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register([Bind("Id,UserId,Type")] Provider provider, int[] selectedServices)
         {
-            //if (ModelState.IsValid)
-            //{
                 provider.User = await _userManager.FindByIdAsync(provider.UserId);
 
                 try
@@ -77,7 +75,7 @@ namespace MedWebApp.Controllers
                                 ServiceId = serviceId
                             });
                         }
-                        var SelServices = await _context.Service.Where(s => selectedServices.Contains(s.Id)).AsNoTracking().ToListAsync();
+                        var SelServices = await _context.Service.Where(s => selectedServices.Contains(s.Id)).ToListAsync();
                         provider.AvailableServices = SelServices;
                     }
                     _context.Add(provider);
@@ -92,9 +90,6 @@ namespace MedWebApp.Controllers
                     }
                     throw;
                 }
-            //}
-            //return View(provider);
-            return RedirectToAction(nameof(Edit), new { id = provider.Id });
         }
 
         // GET: Providers/Create

@@ -14,8 +14,8 @@
         <tr>
             <th>
                 @Html.DisplayNameFor(model => model.BookedService.Name)
-                @Html.DisplayNameFor(model => model.Provider.UserName)
-                @Html.DisplayNameFor(model => model.Provider.Email)
+                @Html.DisplayNameFor(model => model.Provider.User.Email)
+                @Html.DisplayNameFor(model => model.Provider.User.Email)
                 @Html.DisplayNameFor(model => model.DateTime)
             </th>
             <th></th>
@@ -26,8 +26,8 @@
         <tr>
             <td>
                 @Html.DisplayFor(model => item.BookedService.Name)
-                @Html.DisplayFor(model => item.Provider.UserName)
-                @Html.DisplayFor(model => item.Provider.Email)
+                @Html.DisplayFor(model => item.Provider.User.Email)
+                @Html.DisplayFor(model => item.Provider.User.Email)
                 @Html.DisplayFor(modelItem => item.DateTime)
             </td>
             <td>

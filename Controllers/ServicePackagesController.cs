@@ -127,8 +127,6 @@ namespace MedWebApp.Controllers
                      return NotFound();
                     }
 
-                    //servicePackageToUpdate.IncludedServices.Clear();
-
                 if (selectedServices != null && selectedServices.Any())
                 {
                     // Load all selected services in one go

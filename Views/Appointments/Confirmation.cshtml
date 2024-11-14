@@ -1,0 +1,126 @@
+﻿@model Appointment
+
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h2 class="card-title mb-0">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Appointment Confirmed!
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h4 class="text-primary mb-4">Appointment Details</h4>
+
+                    <div class="mb-3">
+                        <strong>Service:</strong>
+                        <span class="ms-2">@Model.BookedService.Name</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Provider:</strong>
+                        <span class="ms-2">@Model.Provider.User.Email</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Date:</strong>
+                        <span class="ms-2">@Model.DateTime.ToLongDateString()</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Time:</strong>
+                        <span class="ms-2">@Model.DateTime.ToShortTimeString()</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Duration:</strong>
+                        <span class="ms-2">@Model.BookedService.DurationHours hours</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>End Time:</strong>
+                        <span class="ms-2">
+                            @Model.DateTime.AddHours(Model.BookedService.DurationHours).ToShortTimeString()
+                        </span>
+                    </div>
+
+                    @if (Model.BookedService != null && !string.IsNullOrEmpty(Model.BookedService.Description))
+                    {
+                        <div class="mb-3">
+                            <strong>Service Description:</strong>
+                            <p class="mt-2">@Model.BookedService.Description</p>
+                        </div>
+                    }
+
+                    
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Important Information</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                                    Please arrive 5 minutes before your appointment
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-clock text-primary me-2"></i>
+                                    Duration: @Model.BookedService.DurationHours hours
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-telephone text-primary me-2"></i>
+                                    Need to reschedule? Contact us
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h5>What's Next?</h5>
+                <ul>
+                    <li>You will receive a confirmation email shortly</li>
+                    <li>You can view or manage your appointment in your account dashboard</li>
+                    <li>Please contact us if you need to make any changes</li>
+                </ul>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-primary">
+                    Return to Home
+                </a>
+                <a asp-action="ShowCustomerAppointments" class="btn btn-outline-primary">
+                    View My Appointments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .bg-success {
+            background-color: #28a745 !important;
+        }
+
+        .card-header {
+            border-bottom: 0;
+        }
+
+        .text-primary {
+            color: #007bff !important;
+        }
+
+        strong {
+            color: #495057;
+        }
+    </style>
+}

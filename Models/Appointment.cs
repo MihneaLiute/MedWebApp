@@ -1,26 +1,29 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MedWebApp.Models
 {
     public class Appointment
     {
         public int Id { get; set; }
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public IdentityUser Customer { get; set; }
-        public IdentityUser Provider { get; set; }
+        [ForeignKey("Customer")]
+        public string CustomerId { get; set; }
+        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public Provider Provider { get; set; }
+        [ForeignKey("Provider")]
+        public int ProviderId { get; set; }
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public Service BookedService { get; set; }
+        [ForeignKey("BookedService")]
+        public int ServiceId { get; set; }  
         public DateTime DateTime { get; set; }
 
         public Appointment()
         {
             
-        }
-        public Appointment (int id, IdentityUser customer, IdentityUser provider, Service bookedService, DateTime dateTime)
-        {
-            Id = id;
-            Customer = customer;    
-            Provider = provider;
-            BookedService = bookedService;
-            DateTime = dateTime;
         }
     }
 }

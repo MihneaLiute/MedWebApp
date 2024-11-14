@@ -30,25 +30,29 @@ namespace MedWebApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BookedServiceId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CustomerId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ProviderId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("ProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookedServiceId");
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
 
-                    b.HasIndex("CustomerId");
+                    b.HasIndex("ProviderId")
+                        .IsUnique();
 
-                    b.HasIndex("ProviderId");
+                    b.HasIndex("ServiceId")
+                        .IsUnique();
 
                     b.ToTable("Appointment");
                 });
@@ -387,19 +391,23 @@ namespace MedWebApp.Migrations
 
             modelBuilder.Entity("MedWebApp.Models.Appointment", b =>
                 {
-                    b.HasOne("MedWebApp.Models.Service", "BookedService")
-                        .WithMany()
-                        .HasForeignKey("BookedServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Customer")
+                        .WithOne()
+                        .HasForeignKey("MedWebApp.Models.Appointment", "CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId");
+                    b.HasOne("MedWebApp.Models.Provider", "Provider")
+                        .WithOne()
+                        .HasForeignKey("MedWebApp.Models.Appointment", "ProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Provider")
-                        .WithMany()
-                        .HasForeignKey("ProviderId");
+                    b.HasOne("MedWebApp.Models.Service", "BookedService")
+                        .WithOne()
+                        .HasForeignKey("MedWebApp.Models.Appointment", "ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("BookedService");
 
