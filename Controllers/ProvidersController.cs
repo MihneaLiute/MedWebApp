@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using MedWebApp.Data;
+﻿using MedWebApp.Data;
 using MedWebApp.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MedWebApp.Controllers
 {
@@ -59,37 +53,37 @@ namespace MedWebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register([Bind("Id,UserId,Type")] Provider provider, int[] selectedServices)
+        public async Task<IActionResult> Register([Bind("Id,UserId,Type, DisplayName")] Provider provider, int[] selectedServices)
         {
-                provider.User = await _userManager.FindByIdAsync(provider.UserId);
+            provider.User = await _userManager.FindByIdAsync(provider.UserId);
 
-                try
+            try
+            {
+                if (selectedServices != null)
                 {
-                    if (selectedServices != null)
+                    foreach (var serviceId in selectedServices)
                     {
-                        foreach (var serviceId in selectedServices)
+                        provider.ProviderServices.Add(new ProviderService
                         {
-                            provider.ProviderServices.Add(new ProviderService
-                            {
-                                ProviderId = provider.Id,
-                                ServiceId = serviceId
-                            });
-                        }
-                        var SelServices = await _context.Service.Where(s => selectedServices.Contains(s.Id)).ToListAsync();
-                        provider.AvailableServices = SelServices;
+                            ProviderId = provider.Id,
+                            ServiceId = serviceId
+                        });
                     }
-                    _context.Add(provider);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Edit), new { id = provider.Id}); // , provider, selectedServices
+                    var SelServices = await _context.Service.Where(s => selectedServices.Contains(s.Id)).ToListAsync();
+                    provider.AvailableServices = SelServices;
                 }
-                catch (DbUpdateConcurrencyException)
+                _context.Add(provider);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Edit), new { id = provider.Id });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (ProviderExists(provider.Id))
                 {
-                    if (ProviderExists(provider.Id))
-                    {
-                        return BadRequest();
-                    }
-                    throw;
+                    return BadRequest();
                 }
+                throw;
+            }
         }
 
         // GET: Providers/Create
@@ -166,59 +160,49 @@ namespace MedWebApp.Controllers
         public async Task<IActionResult> Edit(int id, Provider provider, int[] selectedServices)
         {
             provider.User = await _userManager.FindByIdAsync(provider.UserId);
-         
-            //if (ModelState.IsValid)
-            //{
             try
+            {
+                // Load the provider with its services
+                var providerToUpdate = await _context.Provider
+                    .Include(p => p.AvailableServices)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (providerToUpdate == null)
                 {
-                    // Load the provider with its services
-                    var providerToUpdate = await _context.Provider
-                        .Include(p => p.AvailableServices)
-                        .FirstOrDefaultAsync(p => p.Id == id);
-
-                    if (providerToUpdate == null)
-                    {
-                        return NotFound();
-                    }
-
-                    // Clear existing services
-                    providerToUpdate.AvailableServices.Clear();
-
-                    if (selectedServices != null && selectedServices.Any())
-                    {
-                        // Load all selected services in one go
-                        var servicesToAdd = await _context.Service
-                            .Where(s => selectedServices.Contains(s.Id))
-                            .ToListAsync();
-
-                        foreach (var service in servicesToAdd)
-                        {
-                            providerToUpdate.AvailableServices.Add(service);
-                        }
-                    }
-             
-
-                    // Update other properties
-                    _context.Entry(providerToUpdate).CurrentValues.SetValues(provider);
-                    await _context.SaveChangesAsync();
-
-                    return RedirectToAction(nameof(Edit), new { id = provider.Id});
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
+
+                // Clear existing services
+                providerToUpdate.AvailableServices.Clear();
+
+                if (selectedServices != null && selectedServices.Any())
                 {
-                    if (! ProviderExists(id))
+                    // Load all selected services in one go
+                    var servicesToAdd = await _context.Service
+                        .Where(s => selectedServices.Contains(s.Id))
+                        .ToListAsync();
+
+                    foreach (var service in servicesToAdd)
                     {
-                        return NotFound();
+                        providerToUpdate.AvailableServices.Add(service);
                     }
-                    throw;
                 }
-            //}
 
-            // If we got this far, something failed
-            // Reload the services for the checklist
-            ViewBag.AllServices = await _context.Service.ToListAsync();
 
-            return View(provider);
+                // Update other properties
+                _context.Entry(providerToUpdate).CurrentValues.SetValues(provider);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Edit), new { id = provider.Id });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProviderExists(id))
+                {
+                    return NotFound();
+                }
+                throw;
+            }
         }
 
         // GET: Providers/Delete/5

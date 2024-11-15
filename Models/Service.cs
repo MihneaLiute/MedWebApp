@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace MedWebApp.Models
+﻿namespace MedWebApp.Models
 {
     public class Service
     {
         public int Id { get; set; }
-        public string Name  { get; set; }
+        public string Name { get; set; }
         public string Description { get; set; }
         public int DurationHours { get; set; }
-        public int Price {get; set; }
+        public int Price { get; set; }
         public List<ProviderService> ProviderServices { get; set; } = [];
         public List<Provider> Providers { get; set; } = [];
         public List<string>? Requirements { get; set; } //TODO: consider refactoring into specic Requirement objects or booleans
@@ -17,7 +15,7 @@ namespace MedWebApp.Models
 
         public Service()
         {
-            
+
         }
         public Service(int id)
         {

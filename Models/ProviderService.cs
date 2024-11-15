@@ -14,7 +14,7 @@ namespace MedWebApp.Models
 
         public ProviderService()
         {
-            
+
         }
     }
 }

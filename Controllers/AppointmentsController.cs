@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using MedWebApp.Data;
+﻿using MedWebApp.Data;
 using MedWebApp.Models;
+using MedWebApp.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using MedWebApp.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MedWebApp.Controllers
 {
@@ -49,7 +44,7 @@ namespace MedWebApp.Controllers
             var providers = await _context.Provider
                 .Include(p => p.AvailableServices)
                 .Where(p => p.AvailableServices.Any(s => s.Id == serviceId))
-                .Select(p => new { p.Id, p.User.UserName })
+                .Select(p => new { p.Id, p.DisplayName })
                 .ToListAsync();
 
             return Json(providers);
@@ -86,8 +81,8 @@ namespace MedWebApp.Controllers
 
                 // Generate available time slots
                 var availableSlots = new List<DateTime>();
-                var startTime = date.Date.AddHours(5); // 9 AM
-                var endTime = date.Date.AddHours(24);  // 5 PM
+                var startTime = date.Date.AddHours(5); // 5 AM
+                var endTime = date.Date.AddHours(24);  // 12 AM or midnight
 
                 while (startTime < endTime)
                 {
@@ -212,14 +207,26 @@ namespace MedWebApp.Controllers
         // GET: Appointments
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Appointment.ToListAsync());
+            List<Appointment> appointments = await _context.Appointment
+                .Include(a => a.BookedService)
+                .Include(a => a.Provider)
+                .ThenInclude(p => p.User)
+                .ToListAsync();
+            return View(appointments);
         }
-        
-        //[Authorize(Roles = "customer")] TODO reinstate out
+
+
         // GET: ShowCustomerAppointments
+        [Authorize(Roles = "customer")]
         public async Task<IActionResult> ShowCustomerAppointments()
         {
-            return View("Index", await _context.Appointment.Where(x => x.Customer.NormalizedUserName == HttpContext.User.Identity.Name).ToListAsync());
+            List<Appointment> customerAppointments = await _context.Appointment
+                .Include(a => a.BookedService)
+                .Include(a => a.Provider)
+                .ThenInclude(p => p.User)
+                .Where(x => x.Customer.NormalizedUserName == HttpContext.User.Identity.Name)
+                .ToListAsync();
+            return View("Index", customerAppointments);
         }
 
         // GET: Appointments/Details/5

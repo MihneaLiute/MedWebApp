@@ -18,12 +18,12 @@ namespace MedWebApp.Models
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public Service BookedService { get; set; }
         [ForeignKey("BookedService")]
-        public int ServiceId { get; set; }  
+        public int ServiceId { get; set; }
         public DateTime DateTime { get; set; }
 
         public Appointment()
         {
-            
+
         }
     }
 }

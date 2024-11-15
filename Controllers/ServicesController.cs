@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MedWebApp.Data;
+﻿using MedWebApp.Data;
 using MedWebApp.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MedWebApp.Controllers
 {
@@ -40,7 +40,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Services/Create
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         public IActionResult Create()
         {
             return View();

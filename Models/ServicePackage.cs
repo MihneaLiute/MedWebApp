@@ -18,7 +18,7 @@
             {
                 result = result.Union(service.Requirements).ToList();
             }
-             return result;
+            return result;
         }
 
         public List<string> GetDisclaimers()
@@ -33,7 +33,7 @@
 
         public ServicePackage()
         {
-            
+
         }
 
         public ServicePackage(int id)

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using MedWebApp.Data;
+﻿using MedWebApp.Data;
 using MedWebApp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MedWebApp.Controllers
 {
@@ -75,9 +70,9 @@ namespace MedWebApp.Controllers
             }
             //if (ModelState.IsValid)
             //{
-                _context.Add(servicePackage);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+            _context.Add(servicePackage);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
             //}
             //ViewBag.AllServices = await _context.Service.ToListAsync();
             //return View(servicePackage);
@@ -114,18 +109,18 @@ namespace MedWebApp.Controllers
             {
                 return NotFound();
             }
-            
+
             //if (ModelState.IsValid)
             //{
-                try
+            try
+            {
+                var servicePackageToUpdate = await _context
+                .ServicePackage.Include(sp => sp.IncludedServices)
+                .FirstOrDefaultAsync(sp => sp.Id == id);
+                if (servicePackageToUpdate == null)
                 {
-                    var servicePackageToUpdate = await _context
-                    .ServicePackage.Include(sp => sp.IncludedServices)
-                    .FirstOrDefaultAsync(sp =>  sp.Id == id);
-                    if (servicePackageToUpdate == null)
-                    {
-                     return NotFound();
-                    }
+                    return NotFound();
+                }
 
                 if (selectedServices != null && selectedServices.Any())
                 {
@@ -146,20 +141,20 @@ namespace MedWebApp.Controllers
                 _context.Entry(servicePackageToUpdate)
                     .CurrentValues
                     .SetValues(servicePackage);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ServicePackageExists(servicePackage.Id))
                 {
-                    if (!ServicePackageExists(servicePackage.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
-                return RedirectToAction(nameof(Index));
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
             //}
             //ViewBag.AllServices = await _context.Service.ToListAsync();
             //return View(servicePackage);
