@@ -1,0 +1,136 @@
+﻿@model MedWebApp.Models.ViewModels.AppointmentBookingVM
+
+<div class="container">
+    <h2>Book an Appointment</h2>
+
+    <form asp-action="Book" method="post">
+        <div class="form-group mb-3">
+            <label class="form-label">Select Service</label>
+            <select id="serviceSelect" asp-for="SelectedServiceId" class="form-select">
+                <option value="">-- Select a Service --</option>
+                @foreach (var service in Model.AvailableServices)
+                {
+                    <option value="@service.Id">@service.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group mb-3" id="providerSection" style="display: none;">
+            <label class="form-label">Select Provider</label>
+            <select id="providerSelect" asp-for="SelectedProviderId" class="form-select">
+                <option value="">-- Select a Provider --</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-3" id="dateTimeSection" style="display: none;">
+            <label class="form-label">Select Date and Time</label>
+            <input type="date" id="dateSelect" class="form-control mb-2" />
+            <select id="timeSelect" asp-for="SelectedDateTime" class="form-select">
+                <option value="">-- Select a Time --</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">
+            Book Appointment
+        </button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Service selection change
+            $('#serviceSelect').change(function () {
+                const serviceId = $(this).val();
+                const providerSelect = $('#providerSelect');
+
+                // Clear and hide provider section if no service selected
+                if (!serviceId) {
+                    $('#providerSection, #dateTimeSection, #submitBtn').hide();
+                    providerSelect.empty();
+                    return;
+                }
+
+                // Show loading state
+                providerSelect.empty().append('<option value="">Loading providers...</option>');
+                $('#providerSection').show();
+                console.log('Service selected:', serviceId);
+                // Make AJAX call
+                $.ajax({
+                    url: '/Appointments/GetProvidersForService',
+                    type: 'GET',
+                    data: { serviceId: serviceId },
+                    success: function (providers) {
+                        console.log('Providers received:', providers);
+                        providerSelect.empty().append('<option value="">-- Select a Provider --</option>');
+
+                        if (providers && providers.length > 0) {
+                            providers.forEach(function (provider) {
+                                providerSelect.append(
+                                    `<option value="${provider.id}">${provider.displayName}</option>`
+                                );
+                            });
+                        } else {
+                            providerSelect.append('<option value="">No providers available for this service</option>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching providers:', error);
+                        providerSelect.empty()
+                            .append('<option value="">Error loading providers. The list of providers for this service is empty.</option>');
+                    }
+                });
+
+                $('#dateTimeSection, #submitBtn').hide();
+            });
+
+            // Provider selection change
+            $('#providerSelect').change(function() {
+                if ($(this).val()) {
+                    $('#dateTimeSection').show();
+                    updateAvailableTimeSlots();
+                } else {
+                    $('#dateTimeSection, #submitBtn').hide();
+                }
+            });
+
+            // Date selection change
+            $('#dateSelect').change(updateAvailableTimeSlots);
+
+            // Time selection change
+            $('#timeSelect').change(function() {
+                $('#submitBtn').toggle(!!$(this).val());
+            });
+
+            function updateAvailableTimeSlots() {
+                const providerId = $('#providerSelect').val();
+                const serviceId = $('#serviceSelect').val();
+                const date = $('#dateSelect').val();
+
+                if (!providerId || !serviceId || !date) return;
+
+                $.get('/Appointments/GetAvailableTimeSlots', {
+                    providerId: providerId,
+                    serviceId: serviceId,
+                    date: date
+                })
+                .done(function(timeSlots) {
+                    const timeSelect = $('#timeSelect');
+                    timeSelect.empty()
+                        .append('<option value="">-- Select a Time --</option>');
+
+                    timeSlots.forEach(function(slot) {
+                        const dateTime = new Date(slot);
+                        const timeString = dateTime.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        timeSelect.append(
+                            `<option value="${slot}">${timeString}</option>`
+                        );
+                    });
+                });
+            }
+        });
+    </script>
+}
