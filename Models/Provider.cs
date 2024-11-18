@@ -12,7 +12,7 @@ namespace MedWebApp.Models
         public string DisplayName { get; set; }
         public List<ProviderService> ProviderServices { get; set; } = [];
         public List<Service> AvailableServices { get; set; } = [];
-
+        public List<Appointment> Appointments { get; set; } = [];
         public Provider()
         {
 

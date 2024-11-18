@@ -37,20 +37,20 @@ namespace MedWebApp.Data
 
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Provider)
-                .WithOne()
-                .HasForeignKey<Appointment>(a => a.ProviderId)
+                .WithMany(p => p.Appointments)
+                .HasForeignKey(a => a.ProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Customer)
-                .WithOne()
-                .HasForeignKey<Appointment>(a => a.CustomerId)
+                .WithMany()
+                .HasForeignKey(a => a.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.BookedService)
-                .WithOne()
-                .HasForeignKey<Appointment>(a => a.ServiceId)
+                .WithMany()
+                .HasForeignKey(a => a.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
 
