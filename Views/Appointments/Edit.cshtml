@@ -1,34 +1,201 @@
-﻿@model MedWebApp.Models.Appointment
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model MedWebApp.Views.Appointments.AppointmentEditViewModel
 
-@{
-    ViewData["Title"] = "Edit";
-}
+<div class="container">
+    <h2>Edit your Appointment</h2>
 
-<h1>Edit</h1>
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="AppointmentId" />
+        <div class="form-group mb-3">
+            <label class="form-label">Select Service</label>
+            <select id="serviceSelect" asp-for="SelectedServiceId" class="form-select">
+                <option value="">-- Select a Service --</option>
+                @foreach (var service in Model.AvailableServices)
+                {
+                    <option value="@service.Id">@service.Name</option>
+                }
+            </select>
+        </div>
 
-<h4>Appointment</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="DateTime" class="control-label"></label>
-                <input asp-for="DateTime" class="form-control" />
-                <span asp-validation-for="DateTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
+        <div class="form-group mb-3" id="providerSection" >
+            <label class="form-label">Select Provider</label>
+            <select id="providerSelect" asp-for="SelectedProviderId" class="form-select">
+                <option value="">-- Select a Provider --</option>
+            </select>
+        </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+        <div class="form-group mb-3" id="dateTimeSection" >
+            <label class="form-label">Select Date and Time</label>
+            <input type="date" id="dateSelect" class="form-control mb-2" />
+            <select id="timeSelect" asp-for="SelectedDateTime" class="form-select">
+                <option value="">-- Select a Time --</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+            Save Changes
+        </button>
+    </form>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            const initialServiceId = '@Model.SelectedServiceId';
+            const initialProviderId = '@Model.SelectedProviderId';
+            const initialDateTime = '@Model.SelectedDateTime';
+
+            // Select service first
+            $('#serviceSelect').val(initialServiceId).change();
+
+            // Modify the service selection AJAX success to handle provider pre-selection
+            function handleProviderPopulation(providers) {
+                const providerSelect = $('#providerSelect');
+                providerSelect.empty().append('<option value="">-- Select a Provider --</option>');
+
+                if (providers && providers.length > 0) {
+                    providers.forEach(function (provider) {
+                        providerSelect.append(
+                            `<option value="${provider.id}">${provider.displayName}</option>`
+                        );
+                    });
+
+                    // Pre-select the provider after providers are loaded
+                    if (initialProviderId) {
+                        providerSelect.val(initialProviderId).change();
+                    }
+                } else {
+                    providerSelect.append('<option value="">No providers available for this service</option>');
+                }
+            }
+
+            // Update function to pre-select time after slots are loaded
+            function updateAvailableTimeSlots() {
+                const providerId = $('#providerSelect').val();
+                const serviceId = $('#serviceSelect').val();
+                const date = $('#dateSelect').val();
+
+                console.log('Updating time slots:', {
+                    providerId: providerId,
+                    serviceId: serviceId,
+                    date: date,
+                    initialDateTime: initialDateTime
+                });
+
+                if (!providerId || !serviceId || !date) {
+                    console.log('Missing required parameters for time slots');
+                    return;
+                }
+
+                $.get('/Appointments/GetAvailableTimeSlots', {
+                    providerId: providerId,
+                    serviceId: serviceId,
+                    date: date
+                })
+                    .done(function(timeSlots) {
+                        console.log('Received time slots:', timeSlots);
+
+                        const timeSelect = $('#timeSelect');
+                        timeSelect.empty()
+                            .append('<option value="">-- Select a Time --</option>');
+
+                        timeSlots.forEach(function(slot) {
+                            const dateTime = new Date(slot);
+                            const timeString = dateTime.toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            timeSelect.append(
+                                `<option value="${slot}">${timeString}</option>`
+                            );
+
+                            console.log('Checking time slot:', {
+                                slot: slot,
+                                initialDateTime: initialDateTime,
+                                match: slot === initialDateTime
+                            });
+                        });
+
+                        // Pre-select the time if it matches the initial date-time
+                        if (initialDateTime) {
+                            timeSelect.val(initialDateTime);
+                            console.log('Set time select value to:', initialDateTime);
+                        }
+
+                        // Always show submit button and toggle based on time selection
+                        $('#dateTimeSection').show();
+                        $('#submitBtn').show();
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error('Error fetching time slots:', error);
+                        $('#timeSelect').empty()
+                            .append('<option value="">No time slots available</option>');
+                        $('#submitBtn').hide();
+                    });
+            }
+
+            // Modify AJAX calls to use the new handler
+            $.ajax({
+                url: '/Appointments/GetProvidersForService',
+                type: 'GET',
+                data: { serviceId: initialServiceId },
+                success: function(providers) {
+                    handleProviderPopulation(providers);
+
+                    // After providers are loaded, pre-select the provider and trigger time slot update
+                    if (initialProviderId) {
+                        $('#providerSelect').val(initialProviderId).change();
+
+                        // Pre-set the date and trigger time slot update
+                        if (initialDateTime) {
+                            const initialDate = initialDateTime.split('T')[0];
+                            $('#dateSelect').val(initialDate);
+
+                            // Slight delay to ensure all dropdowns are ready
+                            setTimeout(updateAvailableTimeSlots, 100);
+                        }
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching providers:', error);
+                    $('#providerSelect').empty()
+                        .append('<option value="">Error loading providers.</option>');
+                }
+            });
+
+            // Event listeners for changes
+            $('#serviceSelect').change(function () {
+                const serviceId = $(this).val();
+                const providerSelect = $('#providerSelect');
+
+                if (!serviceId) {
+                    $('#providerSection, #dateTimeSection, #submitBtn').hide();
+                    providerSelect.empty();
+                    return;
+                }
+
+                // Fetch providers for the selected service
+                $.ajax({
+                    url: '/Appointments/GetProvidersForService',
+                    type: 'GET',
+                    data: { serviceId: serviceId },
+                    success: handleProviderPopulation
+                });
+            });
+
+            $('#providerSelect').change(function() {
+                if ($(this).val()) {
+                    $('#dateTimeSection').show();
+                } else {
+                    $('#dateTimeSection, #submitBtn').hide();
+                }
+            });
+
+            $('#dateSelect').change(updateAvailableTimeSlots);
+
+            $('#timeSelect').change(function() {
+                $('#submitBtn').toggle(!!$(this).val());
+            });
+        });
+    </script>
 }
