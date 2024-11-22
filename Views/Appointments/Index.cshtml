@@ -12,18 +12,32 @@
 <table class="table">
     <thead>
         <tr>
+            @if (!User.IsInRole("customer"))
+            {
+                <th>Customer's Email</th>
+            }
             <th>Service</th>
-            <th>Provider</th>
-            <th>Provider's Email Address</th>
+            @if (!User.IsInRole("provider"))
+            {
+                <th>Provider</th>
+                <th>Provider's Email Address</th>
+            }
             <th>Date and Time</th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
         <tr>
+                @if (!User.IsInRole("customer"))
+                {
+                    <td>@Html.DisplayFor(model => item.Customer.Email)</td>
+                }
                 <td>@Html.DisplayFor(model => item.BookedService.Name)</td>
-                <td>@Html.DisplayFor(model => item.Provider.DisplayName)</td>
-                <td>@Html.DisplayFor(model => item.Provider.User.Email)</td>
+                @if (!User.IsInRole("provider"))
+                {
+                    <td>@Html.DisplayFor(model => item.Provider.DisplayName)</td>
+                    <td>@Html.DisplayFor(model => item.Provider.User.Email)</td>
+                }
                 <td>@Html.DisplayFor(modelItem => item.DateTime)</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

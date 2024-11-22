@@ -1,5 +1,6 @@
 ﻿using MedWebApp.Data;
 using MedWebApp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,12 +19,14 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Providers
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.Provider.ToListAsync());
         }
 
         // GET: Providers/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -42,6 +45,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Providers/Register
+        [Authorize(Roles = "provider")]
         public async Task<IActionResult> Register()
         {
             ViewBag.AllServices = await _context.Service.ToListAsync();
@@ -52,6 +56,7 @@ namespace MedWebApp.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "provider")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register([Bind("Id,UserId,Type, DisplayName")] Provider provider, int[] selectedServices)
         {
@@ -86,28 +91,7 @@ namespace MedWebApp.Controllers
             }
         }
 
-        // GET: Providers/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Providers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,UserId,Type")] Provider provider)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(provider);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(provider);
-        }
-
+        [Authorize(Roles = "provider")]
         public async Task<IActionResult> ManageProvider()
         {
             // Get current logged in user
@@ -133,6 +117,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Providers/Edit/5
+        [Authorize(Roles = "provider")]
         public async Task<IActionResult> Edit(int id)
         {
 
@@ -157,6 +142,7 @@ namespace MedWebApp.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "provider")]
         public async Task<IActionResult> Edit(int id, Provider provider, int[] selectedServices)
         {
             provider.User = await _userManager.FindByIdAsync(provider.UserId);
@@ -206,6 +192,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Providers/Delete/5
+        [Authorize(Roles = "provider")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -225,6 +212,7 @@ namespace MedWebApp.Controllers
 
         // POST: Providers/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "provider")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -238,6 +226,7 @@ namespace MedWebApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize]
         private bool ProviderExists(int id)
         {
             return _context.Provider.Any(e => e.Id == id);

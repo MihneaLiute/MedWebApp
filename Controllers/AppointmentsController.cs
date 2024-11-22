@@ -1,6 +1,6 @@
-﻿using MedWebApp.Data;
+﻿using System.Data;
+using MedWebApp.Data;
 using MedWebApp.Models;
-using MedWebApp.Models.ViewModels;
 using MedWebApp.Views.Appointments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +29,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Initial booking page
+        [Authorize]
         public async Task<IActionResult> Book()
         {
             var vm = new AppointmentBookingViewModel
@@ -39,6 +40,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Get available providers for a service
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetProvidersForService(int serviceId)
         {
@@ -51,6 +53,7 @@ namespace MedWebApp.Controllers
             return Json(providers);
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date)
         {
@@ -125,6 +128,7 @@ namespace MedWebApp.Controllers
         }
 
         // POST: Create the appointment
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
@@ -153,6 +157,7 @@ namespace MedWebApp.Controllers
             return RedirectToAction(nameof(Confirmation), new { id = appointment.Id });
         }
 
+        [Authorize]
         public async Task<IActionResult> Confirmation(int? id)
         {
             if (id == null)
@@ -206,14 +211,16 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Appointments
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Index()
         {
-            List<Appointment> appointments = await _context.Appointment
+            List<Appointment> allAppointments = await _context.Appointment
+                .Include(a => a.Customer)
                 .Include(a => a.BookedService)
                 .Include(a => a.Provider)
                 .ThenInclude(p => p.User)
                 .ToListAsync();
-            return View(appointments);
+            return View(allAppointments);
         }
 
 
@@ -229,8 +236,34 @@ namespace MedWebApp.Controllers
                 .ToListAsync();
             return View("Index", customerAppointments);
         }
+        
+        // GET: ShowProviderAppointments
+        [Authorize(Roles = "provider")]
+        public async Task<IActionResult> ShowProviderAppointments()
+        {
+            IdentityUser currentUser = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
+
+            try
+            {
+                Provider currentProvider = _context.Provider
+                    .FirstOrDefault(p => p.UserId == currentUser.Id);
+                List<Appointment> providerAppointments = await _context.Appointment
+                    .Include(a => a.Customer)
+                    .Include(a => a.BookedService)
+                    .Include(a => a.Provider)
+                    .Where(a => a.ProviderId == currentProvider.Id)
+                    .ToListAsync();
+            
+                return View("Index", providerAppointments);
+            }
+            catch (DBConcurrencyException)
+            {
+                return BadRequest("The currently logged in used does not have a provider profile.");
+            }
+        }
 
         // GET: Appointments/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -252,13 +285,8 @@ namespace MedWebApp.Controllers
             return View(appointment);
         }
 
-        // GET: Appointments/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
         // GET: Appointments/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -287,6 +315,7 @@ namespace MedWebApp.Controllers
         // POST: Appointments/Edit/5
         // POST: Edit the appointment
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(AppointmentEditViewModel vm)
         {
@@ -305,14 +334,6 @@ namespace MedWebApp.Controllers
             if (updatedProvider == null) return NotFound("provider with id" + vm.SelectedProviderId.Value + " not found");
             Service updatedService = await _context.Service.FindAsync(vm.SelectedServiceId.Value);
             if (updatedService == null) return NotFound("Service with id" + vm.SelectedServiceId.Value + " not found");
-            
-            // var updatedAppointment = new Appointment
-            // {
-            //     Customer = currentUser,
-            //     Provider = updatedProvider,
-            //     BookedService = updatedService,
-            //     DateTime = vm.SelectedDateTime.Value
-            // };
             
             var appointmentToUpdate = await _context.Appointment.FindAsync(vm.AppointmentId.Value);
             
@@ -341,6 +362,7 @@ namespace MedWebApp.Controllers
 
 
         // GET: Appointments/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -359,6 +381,7 @@ namespace MedWebApp.Controllers
         }
 
         // POST: Appointments/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -372,7 +395,8 @@ namespace MedWebApp.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
+        
+        [Authorize] 
         private bool AppointmentExists(int id)
         {
             return _context.Appointment.Any(e => e.Id == id);
