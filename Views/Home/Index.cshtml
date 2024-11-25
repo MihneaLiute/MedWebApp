@@ -1,27 +1,33 @@
 ﻿@using Microsoft.AspNetCore.Identity
 
 @inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
-
 
 @{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@if (!SignInManager.IsSignedIn(User) || User.IsInRole("customer"))
+{
+    <h3 class="display-4">On-demand Medical Services at you Fingertips!</h3>
+    <p>Discover our wide and expanding range of <a asp-area="" asp-controller="Services" asp-action="Index">services</a> and our <a asp-area="" asp-controller="ServicePackages" asp-action="Index">service package bundles</a>.</p>
+    <p>Looking for something specific? <a asp-area="" asp-controller="Services" asp-action="ShowSearchForm">Search</a> our Services.</p>
+}
 
 @if (User.IsInRole("customer"))
 {
-    
-} 
+    <p>Already know what you want? <a asp-area="" asp-controller="Appointments" asp-action="Book">Book an Appointment</a>!</p>
+    <p>View <a asp-area="" asp-controller="Appointments" asp-action="ShowCustomerAppointments">your Appointments</a>.</p>
+}
 else if (User.IsInRole("provider"))
 {
-    
+    <h3 class="display-4">Welcome, @User.Identity.Name!</h3>
+    <p>Manage your <a asp-area="" asp-controller="Appointments" asp-action="ShowProviderAppointments">Appointments</a></p>
+    <p>Manage your <a asp-area="" asp-controller="Providers" asp-action="ManageProvider">Provider Profile</a></p>
 }
 else if (User.IsInRole("admin"))
 {
-    
+    <h3 class="display-4">Welcome, Admin!</h3>
+    <p>Manage available <a asp-area="" asp-controller="Services" asp-action="Index">Services</a>.</p>
+    <p>Manage available <a asp-area="" asp-controller="ServicePackages" asp-action="Index">Service Packages</a>.</p>
+    <p>Manage <a asp-area="" asp-controller="Appointments" asp-action="Index">Appointments</a>.</p>
 }
