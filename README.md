@@ -1,6 +1,6 @@
 ﻿# MedWebApp
 
-MedWebApp is a web application designed to provide a platform for accessing and managing an on-demand medical services business.
+MedWebApp is a prototype Web Application designed to provide a platform for accessing and managing an on-demand medical services business.
 Users can browse available services, book appointments, and manage their profiles.
 The application supports different roles such as customers, providers, and administrators, each with specific functionalities.
 
@@ -76,4 +76,4 @@ Contributions are welcome! Please fork the repository and create a pull request 
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+This project is licensed under the MIT License. See the `LICENSE.txt` file for more details.
