@@ -55,7 +55,7 @@ namespace MedWebApp.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date)
+        public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date, int? appointmentId = null)
         {
             try
             {
@@ -80,6 +80,7 @@ namespace MedWebApp.Controllers
                     .Include(a => a.BookedService)
                     .Where(a => a.Provider.Id == providerId &&
                                a.DateTime.Date == date.Date)
+                    .Where(a => appointmentId == null || a.Id != appointmentId)
                     .Select(a => new { a.DateTime, a.BookedService.DurationHours })
                     .ToListAsync();
 
