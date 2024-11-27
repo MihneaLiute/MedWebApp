@@ -1,6 +1,7 @@
-﻿using MedWebApp.Data;
+﻿using System.Data;
+using MedWebApp.Data;
 using MedWebApp.Models;
-using MedWebApp.Models.ViewModels;
+using MedWebApp.Views.Appointments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -28,9 +29,10 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Initial booking page
+        [Authorize]
         public async Task<IActionResult> Book()
         {
-            var vm = new AppointmentBookingVM
+            var vm = new AppointmentBookingViewModel
             {
                 AvailableServices = await _context.Service.ToListAsync()
             };
@@ -38,6 +40,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Get available providers for a service
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetProvidersForService(int serviceId)
         {
@@ -50,8 +53,9 @@ namespace MedWebApp.Controllers
             return Json(providers);
         }
 
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date)
+        public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date, int? appointmentId = null)
         {
             try
             {
@@ -76,6 +80,7 @@ namespace MedWebApp.Controllers
                     .Include(a => a.BookedService)
                     .Where(a => a.Provider.Id == providerId &&
                                a.DateTime.Date == date.Date)
+                    .Where(a => appointmentId == null || a.Id != appointmentId)
                     .Select(a => new { a.DateTime, a.BookedService.DurationHours })
                     .ToListAsync();
 
@@ -124,9 +129,10 @@ namespace MedWebApp.Controllers
         }
 
         // POST: Create the appointment
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Book(AppointmentBookingVM vm)
+        public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
         {
             if (!vm.SelectedServiceId.HasValue ||
                 !vm.SelectedProviderId.HasValue ||
@@ -152,6 +158,7 @@ namespace MedWebApp.Controllers
             return RedirectToAction(nameof(Confirmation), new { id = appointment.Id });
         }
 
+        [Authorize]
         public async Task<IActionResult> Confirmation(int? id)
         {
             if (id == null)
@@ -205,14 +212,16 @@ namespace MedWebApp.Controllers
         }
 
         // GET: Appointments
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Index()
         {
-            List<Appointment> appointments = await _context.Appointment
+            List<Appointment> allAppointments = await _context.Appointment
+                .Include(a => a.Customer)
                 .Include(a => a.BookedService)
                 .Include(a => a.Provider)
                 .ThenInclude(p => p.User)
                 .ToListAsync();
-            return View(appointments);
+            return View(allAppointments);
         }
 
 
@@ -228,8 +237,34 @@ namespace MedWebApp.Controllers
                 .ToListAsync();
             return View("Index", customerAppointments);
         }
+        
+        // GET: ShowProviderAppointments
+        [Authorize(Roles = "provider")]
+        public async Task<IActionResult> ShowProviderAppointments()
+        {
+            IdentityUser currentUser = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
+
+            try
+            {
+                Provider currentProvider = _context.Provider
+                    .FirstOrDefault(p => p.UserId == currentUser.Id);
+                List<Appointment> providerAppointments = await _context.Appointment
+                    .Include(a => a.Customer)
+                    .Include(a => a.BookedService)
+                    .Include(a => a.Provider)
+                    .Where(a => a.ProviderId == currentProvider.Id)
+                    .ToListAsync();
+            
+                return View("Index", providerAppointments);
+            }
+            catch (DBConcurrencyException)
+            {
+                return BadRequest("The currently logged in used does not have a provider profile.");
+            }
+        }
 
         // GET: Appointments/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -237,8 +272,12 @@ namespace MedWebApp.Controllers
                 return NotFound();
             }
 
-            var appointment = await _context.Appointment
+            Appointment? appointment = await _context.Appointment
+                .Include(a => a.BookedService)
+                .Include(a => a.Provider)
+                .ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (appointment == null)
             {
                 return NotFound();
@@ -247,81 +286,84 @@ namespace MedWebApp.Controllers
             return View(appointment);
         }
 
-        // GET: Appointments/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Appointments/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,DateTime")] Appointment appointment)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(appointment);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(appointment);
-        }
-
         // GET: Appointments/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-
-            var appointment = await _context.Appointment.FindAsync(id);
+            
+            var appointment = await _context.Appointment.FindAsync(id.Value);
             if (appointment == null)
             {
                 return NotFound();
             }
-            ViewBag.AllServices = await _context.Service.ToListAsync();
-            return View(appointment);
+
+            List<Service> allServices = await _context.Service.ToListAsync();
+            AppointmentEditViewModel vm = new AppointmentEditViewModel 
+            {
+                AppointmentId = appointment.Id,
+                AvailableServices = allServices,
+                SelectedServiceId = appointment.ServiceId,
+                SelectedProviderId = appointment.ProviderId,
+                SelectedDateTime = appointment.DateTime
+            };
+            return View(vm);
         }
 
         // POST: Appointments/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Edit the appointment
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,DateTime")] Appointment appointment)
+        public async Task<IActionResult> Edit(AppointmentEditViewModel vm)
         {
-            if (id != appointment.Id)
+            if (!vm.AppointmentId.HasValue ||
+                !vm.SelectedServiceId.HasValue ||
+                !vm.SelectedProviderId.HasValue ||
+                !vm.SelectedDateTime.HasValue)
             {
-                return NotFound();
+                return BadRequest("Missing required fields");
             }
 
-            if (ModelState.IsValid)
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound("User not found");
+
+            Provider updatedProvider = await _context.Provider.FindAsync(vm.SelectedProviderId.Value);
+            if (updatedProvider == null) return NotFound("provider with id" + vm.SelectedProviderId.Value + " not found");
+            Service updatedService = await _context.Service.FindAsync(vm.SelectedServiceId.Value);
+            if (updatedService == null) return NotFound("Service with id" + vm.SelectedServiceId.Value + " not found");
+            
+            var appointmentToUpdate = await _context.Appointment.FindAsync(vm.AppointmentId.Value);
+            
+            if (appointmentToUpdate == null)
             {
-                try
-                {
-                    _context.Update(appointment);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AppointmentExists(appointment.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return BadRequest("No appointment found with id=" + vm.AppointmentId);
             }
-            return View(appointment);
+            // Check if the currently logged user is the owner of the appointment being edited
+            if (appointmentToUpdate.CustomerId != currentUser.Id || appointmentToUpdate.Customer != currentUser)
+            {
+                return BadRequest("Current user does not match appointment's customer.");
+            }
+            
+            appointmentToUpdate.ServiceId = updatedService.Id;
+            appointmentToUpdate.BookedService = updatedService;
+            appointmentToUpdate.ProviderId = updatedProvider.Id;
+            appointmentToUpdate.Provider = updatedProvider;
+            appointmentToUpdate.DateTime = vm.SelectedDateTime.Value;
+            
+            //_context.Appointment.Entry(appointmentToUpdate).CurrentValues.SetValues(updatedAppointment);
+            _context.Update(appointmentToUpdate);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Confirmation), new { id = appointmentToUpdate.Id });
         }
 
+
         // GET: Appointments/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -340,6 +382,7 @@ namespace MedWebApp.Controllers
         }
 
         // POST: Appointments/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -353,7 +396,8 @@ namespace MedWebApp.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
+        
+        [Authorize] 
         private bool AppointmentExists(int id)
         {
             return _context.Appointment.Any(e => e.Id == id);

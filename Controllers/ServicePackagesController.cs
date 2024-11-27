@@ -1,5 +1,6 @@
 ﻿using MedWebApp.Data;
 using MedWebApp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +40,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: ServicePackages/Create
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create()
         {
             // Get all services for the checkbox list
@@ -50,6 +52,7 @@ namespace MedWebApp.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,Price")] ServicePackage servicePackage, int[] selectedServices)
         {
@@ -79,6 +82,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: ServicePackages/Edit/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -102,6 +106,7 @@ namespace MedWebApp.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price")] ServicePackage servicePackage, int[] selectedServices)
         {
@@ -161,6 +166,7 @@ namespace MedWebApp.Controllers
         }
 
         // GET: ServicePackages/Delete/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -180,6 +186,7 @@ namespace MedWebApp.Controllers
 
         // POST: ServicePackages/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {

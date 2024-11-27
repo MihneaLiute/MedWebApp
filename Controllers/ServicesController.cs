@@ -50,6 +50,7 @@ namespace MedWebApp.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,DurationHours,Price,Requirements,Disclaimers")] Service service)
         {
@@ -136,6 +137,7 @@ namespace MedWebApp.Controllers
 
         // POST: Services/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "admin")]
         [ValidateAntiForgeryToken]
 
         public async Task<IActionResult> DeleteConfirmed(int id)

@@ -98,6 +98,9 @@
                 <a asp-action="Index" asp-controller="Home" class="btn btn-primary">
                     Return to Home
                 </a>
+                <a asp-action="Edit" asp-controller="Appointments" asp-route-id="@Model.Id" class="btn btn-primary">
+                    Edit this Appointment
+                </a>
                 <a asp-action="ShowCustomerAppointments" class="btn btn-outline-primary">
                     View My Appointments
                 </a>
