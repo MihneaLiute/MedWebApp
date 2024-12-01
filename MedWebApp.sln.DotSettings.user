@@ -1,0 +1,36 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=13dbfd88_002D668c_002D4c4d_002Db3d3_002D31d6962f1bbf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists #5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::98CD8BAE-190E-42E0-B6A7-403519976145::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1dbb1ed5_002D0931_002D4866_002Dbfd6_002Dcad4da916c14/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::E731FBDE-9795-48A5-A854-8C03C620A1BD::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=29c75acd_002D6d54_002D4cc2_002D9bdf_002D66dbc6cb3bc4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::C18EA99C-CC73-4164-9BBC-B563C5568CDF::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6a687433_002D4a40_002D45d3_002D91cb_002Dbdaf3ec745ef/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists #4" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::E731FBDE-9795-48A5-A854-8C03C620A1BD::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c0964ca8_002Db889_002D4905_002Daa3c_002D127ebd4db744/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists #7" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::C18EA99C-CC73-4164-9BBC-B563C5568CDF::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d14bcc27_002D1599_002D4188_002Db8f9_002D9e23942a618c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::E731FBDE-9795-48A5-A854-8C03C620A1BD::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d48409b1_002D5933_002D4b82_002Dba19_002D811186e90672/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetProvidersForService_ShouldReturnProviders_WhenServiceExists" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::E731FBDE-9795-48A5-A854-8C03C620A1BD::net8.0::MedWebAppTest.Controllers.AppointmentsControllerTest.GetProvidersForService_ShouldReturnProviders_WhenServiceExists&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
