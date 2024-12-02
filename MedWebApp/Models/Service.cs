@@ -7,8 +7,8 @@
         public string Description { get; set; }
         public int DurationHours { get; set; }
         public int Price { get; set; }
-        public List<ProviderService> ProviderServices { get; set; } = [];
-        public List<Provider> Providers { get; set; } = [];
+        public List<ProviderService>? ProviderServices { get; set; } = [];
+        public List<Provider>? Providers { get; set; } = [];
         public List<string>? Requirements { get; set; } //TODO: consider refactoring into specic Requirement objects or booleans
         public List<string>? Disclaimers { get; set; }
 

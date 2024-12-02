@@ -1,6 +1,6 @@
+using System.Diagnostics;
 using MedWebApp.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace MedWebApp.Controllers
 {

@@ -1,5 +1,7 @@
-﻿
+﻿/.github
 /.vs
 /.idea
-/bin
-/obj
+/MedWebApp/bin
+/MedWebApp/obj
+/TestProject/bin
+/TestProject/obj

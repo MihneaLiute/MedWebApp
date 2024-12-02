@@ -28,17 +28,6 @@ namespace MedWebApp.Controllers
             _env = env;
         }
 
-        // GET: Initial booking page
-        [Authorize]
-        public async Task<IActionResult> Book()
-        {
-            var vm = new AppointmentBookingViewModel
-            {
-                AvailableServices = await _context.Service.ToListAsync()
-            };
-            return View(vm);
-        }
-
         // GET: Get available providers for a service
         [Authorize]
         [HttpGet]
@@ -53,6 +42,14 @@ namespace MedWebApp.Controllers
             return Json(providers);
         }
 
+        /// <summary>
+        /// Calculates the timeslots when a provider is available for a service on a given date.
+        /// </summary>
+        /// <param name="providerId">The id of the provider whose availability is being checked.</param>
+        /// <param name="serviceId">The id of the service being checked for. The service is used for its duration.</param>
+        /// <param name="date">The date for which availability is checked.</param>
+        /// <param name="appointmentId">The id of the current appointment, with which timeslot overlap can be ignored.</param>
+        /// <returns></returns>
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date, int? appointmentId = null)
@@ -72,6 +69,12 @@ namespace MedWebApp.Controllers
                 if (service == null)
                 {
                     return BadRequest($"Service with ID {serviceId} not found");
+                }
+                
+                // Verify that the provider offers the service
+                if (!provider.AvailableServices.Any(s => s.Id == serviceId))
+                {
+                    return BadRequest($"Provider with ID {providerId} does not offer service with ID {serviceId}");
                 }
 
                 // Get existing appointments with explicit includes
@@ -127,9 +130,20 @@ namespace MedWebApp.Controllers
                 return StatusCode(500, new { error = "An error occurred while getting available time slots." });
             }
         }
-
-        // POST: Create the appointment
+        
+        // GET: Initial booking page
         [Authorize]
+        public async Task<IActionResult> Book()
+        {
+            var vm = new AppointmentBookingViewModel
+            {
+                AvailableServices = await _context.Service.ToListAsync()
+            };
+            return View(vm);
+        }
+
+        // POST: Book an appointment as a customer
+        [Authorize(Roles = "customer")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
@@ -144,6 +158,15 @@ namespace MedWebApp.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return NotFound("User not found");
 
+            // Check if the selected timeslot is available
+            var availableTimeslots = GetAvailableTimeSlots(vm.SelectedProviderId.Value, vm.SelectedServiceId.Value,
+                vm.SelectedDateTime.Value.Date).Result as JsonResult;
+            List<DateTime> availableTimes = availableTimeslots.Value as List<DateTime>;
+            if(!availableTimes.Contains(vm.SelectedDateTime.Value))
+            {
+                return BadRequest("Selected Service is not available is not available at selected DateTime from selected Provider");
+            }
+            // Create the appointment
             var appointment = new Appointment
             {
                 Customer = currentUser,
@@ -152,6 +175,50 @@ namespace MedWebApp.Controllers
                 DateTime = vm.SelectedDateTime.Value
             };
 
+            _context.Appointment.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Confirmation), new { id = appointment.Id });
+        }
+        
+        // POST: Book an appointment as an admin for another user
+        [Authorize(Roles = "admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BookForOther(AppointmentBookingViewModel vm)
+        {
+            if (!vm.SelectedServiceId.HasValue ||
+                !vm.SelectedProviderId.HasValue ||
+                !vm.SelectedDateTime.HasValue)
+            {
+                return BadRequest("Missing required fields");
+            }
+            // Perform checks on the currently logged in user
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Forbid("Not Logged In");
+            
+            bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "admin");
+            if(!isAdmin) return Forbid("Currently logged-in user is not an admin");
+            // Fetch the target customer
+            IdentityUser targetCustomer = await _context.Users.FirstOrDefaultAsync(u => u.Id == vm.SelectedCustomerId);
+            if (targetCustomer == null) return NotFound("Target customer not found");
+            // Check if the selected timeslot is available
+            var availableTimeslots = GetAvailableTimeSlots(vm.SelectedProviderId.Value, vm.SelectedServiceId.Value,
+                vm.SelectedDateTime.Value.Date).Result as JsonResult;
+            List<DateTime> availableTimes = availableTimeslots.Value as List<DateTime>;
+            if(!availableTimes.Contains(vm.SelectedDateTime.Value))
+            {
+                return BadRequest("Selected Service is not available is not available at selected DateTime from selected Provider");
+            }
+            // Create the appointment
+            var appointment = new Appointment
+            {
+                Customer = targetCustomer,
+                Provider = await _context.Provider.FindAsync(vm.SelectedProviderId.Value),
+                BookedService = await _context.Service.FindAsync(vm.SelectedServiceId.Value),
+                DateTime = vm.SelectedDateTime.Value
+            };
+            
             _context.Appointment.Add(appointment);
             await _context.SaveChangesAsync();
 
