@@ -299,6 +299,7 @@ public class AppointmentsControllerTest : IDisposable
         _context.Appointment.Count().Should().Be(1);
     }
     
+    [Fact]
     public async Task Book_ShouldReturnBadRequest_WhenBusyTimeSlot()
     {
         // Arrange
@@ -317,7 +318,7 @@ public class AppointmentsControllerTest : IDisposable
         // Act
         var result = await _appointmentsController.Book(appointmentDataVM);
         // Assert
-        result.Should().BeOfType<BadRequestResult>();
+        result.Should().BeOfType<BadRequestObjectResult>();
         _context.Appointment.Count().Should().Be(1);
     }
     
@@ -355,6 +356,168 @@ public class AppointmentsControllerTest : IDisposable
         savedAppointment.DateTime.Should().Be(appointmentDataVM.SelectedDateTime);
     }
 
+    [Fact]
+    public async Task BookForOther_ShouldReturnForbidden_WhenNotLoggedIn()
+    {
+        // Arrange
+        SeedStandardTestData();
+        // BookForOther attempted by a non-logged in user for a customer
+        IdentityUser customerB = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Customer B");
+        _userManagerMock.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+            .ReturnsAsync((IdentityUser) null);
+        // Prepare the appointment data
+        var appointmentDataVM = new AppointmentBookingViewModel
+        {
+            SelectedCustomerId = customerB.Id,
+            SelectedServiceId = 2,
+            SelectedProviderId = 1,
+            SelectedDateTime = DateTime.Today.AddDays(10).AddHours(9)
+        };
+        // Act
+        var result = await _appointmentsController.BookForOther(appointmentDataVM);
+        // Assert
+        result.Should().BeOfType<ForbidResult>();
+        _context.Appointment.Count().Should().Be(1);
+    }
+    
+    [Fact]
+    public async Task BookForOther_ShouldReturnForbidden_WhenNotLoggedInAsAdmin()
+    {
+        // Arrange
+        SeedStandardTestData();
+        // BookForOther attempted by a customer for another customer
+        IdentityUser customerA = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Customer A");
+        IdentityUser customerB = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Customer B");
+        _userManagerMock.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+            .ReturnsAsync(customerA);
+        // Prepare the appointment data
+        var appointmentDataVM = new AppointmentBookingViewModel
+        {
+            SelectedCustomerId = customerB.Id,
+            SelectedServiceId = 2,
+            SelectedProviderId = 1,
+            SelectedDateTime = DateTime.Today.AddDays(10).AddHours(9)
+        };
+        // Act
+        var result = await _appointmentsController.BookForOther(appointmentDataVM);
+        // Assert
+        result.Should().BeOfType<ForbidResult>();
+        _context.Appointment.Count().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task BookForOther_ShouldReturnNotFound_WhenNoUserSelected()
+    {
+        // Arrange
+        SeedStandardTestData();
+        // BookForOther attempted by an admin for a non-existent user
+        IdentityUser admin = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Admin");
+        _userManagerMock.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+            .ReturnsAsync(admin);
+        // Prepare the appointment data
+        var appointmentDataVM = new AppointmentBookingViewModel
+        {
+            SelectedCustomerId = "nouserid42", // Non-existent user
+            SelectedServiceId = 2,
+            SelectedProviderId = 1,
+            SelectedDateTime = DateTime.Today.AddDays(10).AddHours(9)
+        };
+        // Act
+        var result = await _appointmentsController.BookForOther(appointmentDataVM);
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        _context.Appointment.Count().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task BookForOther_ShouldReturnBadRequest_WhenInvalidData()
+    {
+        // Arrange
+        SeedStandardTestData();
+        // BookForOther attempted by an admin for another customer
+        IdentityUser customerA = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Customer A");
+        IdentityUser admin = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Admin");
+        _userManagerMock.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+            .ReturnsAsync(admin);
+        // Prepare the appointment data
+        var appointmentDataVM = new AppointmentBookingViewModel
+        {
+            SelectedCustomerId = customerA.Id,
+            SelectedServiceId = 2, 
+            // SelectedProviderId = 1, // No provider selected in vm
+            SelectedDateTime = DateTime.Today.AddDays(10).AddHours(9)
+        };
+        // Act
+        var result = await _appointmentsController.BookForOther(appointmentDataVM);
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        _context.Appointment.Count().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task BookForOther_ShouldReturnBadRequest_WhenBusyTimeSlot()
+    {
+        // Arrange
+        SeedStandardTestData();
+        // BookForOther attempted by an admin for another customer
+        IdentityUser customerA = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Customer A");
+        IdentityUser admin = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Admin");
+        _userManagerMock.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+            .ReturnsAsync(admin);
+        // Prepare the appointment data
+        // Prepare the appointment data
+        var appointmentDataVM = new AppointmentBookingViewModel
+        {
+            SelectedCustomerId = customerA.Id,
+            SelectedServiceId = 2,
+            SelectedProviderId = 1,
+            SelectedDateTime = DateTime.Today.AddDays(10).AddHours(8) // 10 days from now at 8am, when provider A is already booked
+        };
+        // Act
+        var result = await _appointmentsController.BookForOther(appointmentDataVM);
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        _context.Appointment.Count().Should().Be(1);
+    }
+    
+    
+    [Fact]
+    public async Task BookForOther_ShouldCreateAppointment_WhenValidData()
+    {
+        // Arrange
+        SeedStandardTestData();
+        // BookForOther attempted by an admin for a customer
+        IdentityUser customerA = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Customer A");
+        IdentityUser admin = await _context.Users.FirstOrDefaultAsync(u => u.UserName == "Admin");
+        _userManagerMock.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+            .ReturnsAsync(admin);
+        // Prepare the appointment data
+        var appointmentDataVM = new AppointmentBookingViewModel
+        {
+            SelectedCustomerId = customerA.Id,
+            SelectedServiceId = 2,
+            SelectedProviderId = 1,
+            SelectedDateTime = DateTime.Today.AddDays(10).AddHours(9)
+        };
+        // Act
+        var result = await _appointmentsController.BookForOther(appointmentDataVM);
+        // Assert
+        result.Should().BeOfType<RedirectToActionResult>();
+        var redirectToActionResult = result as RedirectToActionResult;
+        redirectToActionResult.ActionName.Should().Be("Confirmation");
+        redirectToActionResult.RouteValues.Should().ContainKey("id");
+        _context.Appointment.Count().Should().Be(2);
+        var savedAppointment = await _context.Appointment
+            .Include(a => a.Customer)
+            .Include(a => a.BookedService)
+            .Where(a => a.CustomerId == appointmentDataVM.SelectedCustomerId && a.ProviderId == appointmentDataVM.SelectedProviderId)
+            .FirstOrDefaultAsync(a => a.DateTime == appointmentDataVM.SelectedDateTime);
+        savedAppointment.Should().NotBeNull();
+        savedAppointment.Customer.Should().BeEquivalentTo(customerA);
+        savedAppointment.BookedService.Id.Should().Be(appointmentDataVM.SelectedServiceId);
+        savedAppointment.DateTime.Should().Be(appointmentDataVM.SelectedDateTime);
+    }
+    
     public void Dispose()
     {
         _context.Dispose();

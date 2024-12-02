@@ -143,7 +143,7 @@ namespace MedWebApp.Controllers
         }
 
         // POST: Create the appointment
-        [Authorize]
+        [Authorize(Roles = "customer")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
@@ -178,6 +178,15 @@ namespace MedWebApp.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Confirmation), new { id = appointment.Id });
+        }
+        
+        // POST: Create the appointment
+        [Authorize(Roles = "admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BookForOther(AppointmentBookingViewModel vm)
+        {
+            throw new NotImplementedException();
         }
 
         [Authorize]

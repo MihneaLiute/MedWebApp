@@ -4,6 +4,7 @@ namespace MedWebApp.Views.Appointments
 {
     public class AppointmentBookingViewModel
     {
+        public string? SelectedCustomerId { get; set; }
         public int? SelectedServiceId { get; set; }
         public int? SelectedProviderId { get; set; }
         public DateTime? SelectedDateTime { get; set; }
