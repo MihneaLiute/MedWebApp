@@ -142,7 +142,7 @@ namespace MedWebApp.Controllers
             return View(vm);
         }
 
-        // POST: Create the appointment
+        // POST: Book an appointment as a customer
         [Authorize(Roles = "customer")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -166,6 +166,7 @@ namespace MedWebApp.Controllers
             {
                 return BadRequest("Selected Service is not available is not available at selected DateTime from selected Provider");
             }
+            // Create the appointment
             var appointment = new Appointment
             {
                 Customer = currentUser,
@@ -180,13 +181,48 @@ namespace MedWebApp.Controllers
             return RedirectToAction(nameof(Confirmation), new { id = appointment.Id });
         }
         
-        // POST: Create the appointment
+        // POST: Book an appointment as an admin for another user
         [Authorize(Roles = "admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookForOther(AppointmentBookingViewModel vm)
         {
-            throw new NotImplementedException();
+            if (!vm.SelectedServiceId.HasValue ||
+                !vm.SelectedProviderId.HasValue ||
+                !vm.SelectedDateTime.HasValue)
+            {
+                return BadRequest("Missing required fields");
+            }
+            // Perform checks on the currently logged in user
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Forbid("Not Logged In");
+            
+            bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "admin");
+            if(!isAdmin) return Forbid("Currently logged-in user is not an admin");
+            // Fetch the target customer
+            IdentityUser targetCustomer = await _context.Users.FirstOrDefaultAsync(u => u.Id == vm.SelectedCustomerId);
+            if (targetCustomer == null) return NotFound("Target customer not found");
+            // Check if the selected timeslot is available
+            var availableTimeslots = GetAvailableTimeSlots(vm.SelectedProviderId.Value, vm.SelectedServiceId.Value,
+                vm.SelectedDateTime.Value.Date).Result as JsonResult;
+            List<DateTime> availableTimes = availableTimeslots.Value as List<DateTime>;
+            if(!availableTimes.Contains(vm.SelectedDateTime.Value))
+            {
+                return BadRequest("Selected Service is not available is not available at selected DateTime from selected Provider");
+            }
+            // Create the appointment
+            var appointment = new Appointment
+            {
+                Customer = targetCustomer,
+                Provider = await _context.Provider.FindAsync(vm.SelectedProviderId.Value),
+                BookedService = await _context.Service.FindAsync(vm.SelectedServiceId.Value),
+                DateTime = vm.SelectedDateTime.Value
+            };
+            
+            _context.Appointment.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Confirmation), new { id = appointment.Id });
         }
 
         [Authorize]

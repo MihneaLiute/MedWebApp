@@ -40,9 +40,12 @@ public class AppointmentsControllerTest : IDisposable
         // Ensure database is created
         _context.Database.EnsureCreated();
         
-        // Create mocks for other dependencies
+        // Create mocks for user role store and user manager
+        var userStoreMock = new Mock<IUserStore<IdentityUser>>();
+        var userRoleStoreMock = userStoreMock.As<IUserRoleStore<IdentityUser>>();
+
         _userManagerMock = new Mock<UserManager<IdentityUser>>(
-            Mock.Of<IUserStore<IdentityUser>>(),
+            userRoleStoreMock.Object,
             null, null, null, null, null, null, null, null
         ) { CallBase = true };
 
@@ -99,6 +102,17 @@ public class AppointmentsControllerTest : IDisposable
         _context.Users.Add(providerA);
         _context.Users.Add(providerD);
         _context.Users.Add(admin);
+        // Mock inclusion in admin role for the users
+        _userManagerMock.Setup(m => m.IsInRoleAsync(admin, "admin"))
+            .ReturnsAsync(true);
+        _userManagerMock.Setup(m => m.IsInRoleAsync(customerA, "admin"))
+            .ReturnsAsync(false);
+        _userManagerMock.Setup(m => m.IsInRoleAsync(customerB, "admin"))
+            .ReturnsAsync(false);
+        _userManagerMock.Setup(m => m.IsInRoleAsync(providerA, "admin"))
+            .ReturnsAsync(false);
+        _userManagerMock.Setup(m => m.IsInRoleAsync(providerD, "admin"))
+            .ReturnsAsync(false);
         // Create test providers
         var providerProfileA = new Provider 
         { 
