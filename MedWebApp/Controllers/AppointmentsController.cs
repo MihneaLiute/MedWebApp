@@ -28,17 +28,6 @@ namespace MedWebApp.Controllers
             _env = env;
         }
 
-        // GET: Initial booking page
-        [Authorize]
-        public async Task<IActionResult> Book()
-        {
-            var vm = new AppointmentBookingViewModel
-            {
-                AvailableServices = await _context.Service.ToListAsync()
-            };
-            return View(vm);
-        }
-
         // GET: Get available providers for a service
         [Authorize]
         [HttpGet]
@@ -53,6 +42,14 @@ namespace MedWebApp.Controllers
             return Json(providers);
         }
 
+        /// <summary>
+        /// Calculates the timeslots when a provider is available for a service on a given date.
+        /// </summary>
+        /// <param name="providerId">The id of the provider whose availability is being checked.</param>
+        /// <param name="serviceId">The id of the service being checked for. The service is used for its duration.</param>
+        /// <param name="date">The date for which availability is checked.</param>
+        /// <param name="appointmentId">The id of the current appointment, with which timeslot overlap can be ignored.</param>
+        /// <returns></returns>
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAvailableTimeSlots(int providerId, int serviceId, DateTime date, int? appointmentId = null)
@@ -72,6 +69,12 @@ namespace MedWebApp.Controllers
                 if (service == null)
                 {
                     return BadRequest($"Service with ID {serviceId} not found");
+                }
+                
+                // Verify that the provider offers the service
+                if (!provider.AvailableServices.Any(s => s.Id == serviceId))
+                {
+                    return BadRequest($"Provider with ID {providerId} does not offer service with ID {serviceId}");
                 }
 
                 // Get existing appointments with explicit includes
@@ -127,6 +130,17 @@ namespace MedWebApp.Controllers
                 return StatusCode(500, new { error = "An error occurred while getting available time slots." });
             }
         }
+        
+        // GET: Initial booking page
+        [Authorize]
+        public async Task<IActionResult> Book()
+        {
+            var vm = new AppointmentBookingViewModel
+            {
+                AvailableServices = await _context.Service.ToListAsync()
+            };
+            return View(vm);
+        }
 
         // POST: Create the appointment
         [Authorize]
@@ -144,6 +158,14 @@ namespace MedWebApp.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return NotFound("User not found");
 
+            // Check if the selected timeslot is available
+            var availableTimeslots = GetAvailableTimeSlots(vm.SelectedProviderId.Value, vm.SelectedServiceId.Value,
+                vm.SelectedDateTime.Value.Date).Result as JsonResult;
+            List<DateTime> availableTimes = availableTimeslots.Value as List<DateTime>;
+            if(!availableTimes.Contains(vm.SelectedDateTime.Value))
+            {
+                return BadRequest("Selected Service is not available is not available at selected DateTime from selected Provider");
+            }
             var appointment = new Appointment
             {
                 Customer = currentUser,

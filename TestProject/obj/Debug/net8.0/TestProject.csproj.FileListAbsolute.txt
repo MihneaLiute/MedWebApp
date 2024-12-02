@@ -367,3 +367,7 @@ C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\
 C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Windows.Extensions.dll
 C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\MedWebApp.dll
 C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\MedWebApp.pdb
+C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\runtimes\linux-x64\native\libsqlite3.so
+C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\runtimes\osx-x64\native\libsqlite3.dylib
+C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\runtimes\win7-x64\native\sqlite3.dll
+C:\Users\mihne\OneDrive\Desktop\Projects\MedWebApp\TestProject\bin\Debug\net8.0\runtimes\win7-x86\native\sqlite3.dll
